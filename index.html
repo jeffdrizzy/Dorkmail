@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DorkMail — Email Finder</title>
+<meta name="description" content="Google dork query builder and email scraper"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f4f4f1;
+  --card:#ffffff;
+  --border:#deded9;
+  --border2:#c8c8c2;
+  --text:#111110;
+  --muted:#7a7a74;
+  --tag:#eaeae5;
+  --green:#15803d;
+  --green-bg:#f0fdf4;
+  --green-bd:#86efac;
+  --red:#b91c1c;
+  --red-bg:#fef2f2;
+  --red-bd:#fca5a5;
+  --radius:12px;
+  --mono:'DM Mono',ui-monospace,monospace;
+  --sans:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
+}
+
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;-webkit-font-smoothing:antialiased}
+
+header{max-width:640px;margin:0 auto;padding:28px 18px 0}
+.logo{display:flex;align-items:center;gap:0;margin-bottom:4px}
+.logo-dork{font-family:var(--sans);font-size:22px;font-weight:800;letter-spacing:-.5px;background:#111110;color:#fff;padding:4px 10px;border-radius:8px 0 0 8px;line-height:1.2}
+.logo-mail{font-family:var(--sans);font-size:22px;font-weight:800;letter-spacing:-.5px;color:#111110;padding:4px 6px;border-radius:0 8px 8px 0;border:2px solid #111110;border-left:none;line-height:1.2}
+.logo-sub{font-size:12.5px;color:var(--muted);font-weight:400;margin-top:6px;letter-spacing:.1px}
+
+main{max-width:640px;margin:0 auto;padding:0 18px}
+
+.sec{display:flex;align-items:center;gap:9px;margin:26px 0 12px}
+.sec-num{width:24px;height:24px;background:var(--text);color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-title{font-size:14px;font-weight:700;letter-spacing:-.1px}
+.sec-hint{font-size:12px;color:var(--muted);margin-left:auto}
+
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:6px}
+
+.f{margin-bottom:16px}
+.f:last-child{margin-bottom:0}
+.lbl{font-size:10.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:block}
+
+input[type=text]{width:100%;background:#fafaf8;border:1.5px solid var(--border);border-radius:8px;padding:11px 13px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;-webkit-appearance:none;appearance:none;transition:border-color .15s,box-shadow .15s}
+input[type=text]:focus{border-color:var(--text);background:#fff;box-shadow:0 0 0 3px rgba(17,17,16,.08)}
+input::placeholder{color:#b8b8b2;font-family:var(--sans)}
+
+textarea{width:100%;background:#fafaf8;border:1.5px solid var(--border);border-radius:8px;padding:11px 13px;resize:vertical;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;-webkit-appearance:none;transition:border-color .15s;line-height:1.6}
+textarea:focus{border-color:var(--text);background:#fff}
+textarea::placeholder{color:#b8b8b2;font-family:var(--sans);font-size:13px}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--tag);border:1.5px solid var(--border);border-radius:99px;padding:6px 13px;font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;-webkit-user-select:none;user-select:none;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.chip.on{background:var(--text);border-color:var(--text);color:#fff}
+.chip:active{transform:scale(.96)}
+
+.dchip{display:flex;align-items:center;gap:5px;background:var(--tag);border:1.5px solid var(--border);border-radius:99px;padding:6px 13px;font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;-webkit-user-select:none;user-select:none;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.dchip.on{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+.dchip:active{transform:scale(.96)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+.qbox{background:#fafaf8;border:1.5px solid var(--border);border-radius:8px;padding:13px;font-family:var(--mono);font-size:12px;color:var(--text);line-height:1.7;word-break:break-all;min-height:52px}
+.qph{color:var(--muted);font-family:var(--sans);font-size:13px;font-style:italic}
+
+.brow{display:flex;gap:8px;margin-top:14px}
+.btn{flex:1;padding:12px 14px;border-radius:9px;font-family:var(--sans);font-size:13.5px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);transition:all .12s;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;-webkit-appearance:none}
+.btn-solid{background:var(--text);color:#fff;border-color:var(--text);flex:2}
+.btn-solid:active{opacity:.75}
+.btn-outline{background:var(--card);color:var(--text)}
+.btn-outline:active{background:var(--tag)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+.or{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:12px;font-weight:600}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.frow{display:flex;gap:8px}
+.frow input{flex:1}
+.fbtn{background:var(--text);color:#fff;border:none;border-radius:8px;padding:0 16px;font-family:var(--sans);font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;transition:opacity .12s}
+.fbtn:active{opacity:.75}
+.fbtn:disabled{opacity:.35;cursor:not-allowed}
+
+.st{margin-top:7px;font-size:12px;font-family:var(--mono);color:var(--muted);min-height:16px;line-height:1.5}
+.st.ok{color:var(--green)}
+.st.err{color:var(--red)}
+
+.rtop{display:flex;align-items:center;justify-content:space-between;margin:18px 0 10px;padding-top:16px;border-top:1.5px solid var(--border)}
+.rbadge{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.rnum{background:var(--text);color:#fff;border-radius:99px;padding:2px 10px;font-size:11.5px;font-weight:700}
+.ca{background:none;border:1.5px solid var(--border);border-radius:7px;padding:5px 11px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;color:var(--text);-webkit-appearance:none;-webkit-tap-highlight-color:transparent;transition:all .12s}
+.ca:active{background:var(--tag)}
+
+.elist{border:1.5px solid var(--border);border-radius:9px;overflow:hidden;background:var(--card)}
+.erow{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:1px solid var(--border)}
+.erow:last-child{border-bottom:none}
+.ea{flex:1;font-family:var(--mono);font-size:12px;word-break:break-all;color:var(--text);line-height:1.5}
+.ec{background:none;border:1.5px solid var(--border);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;font-weight:700;cursor:pointer;color:var(--muted);flex-shrink:0;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;transition:all .12s}
+.ec:active{border-color:var(--text);color:var(--text)}
+.ec.done{border-color:var(--green);color:var(--green)}
+
+.drow{display:flex;gap:8px;margin-top:10px}
+.dbtn{flex:1;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:9px;font-family:var(--sans);font-size:12.5px;font-weight:700;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;gap:5px;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;transition:all .12s}
+.dbtn:active{background:var(--tag)}
+
+.mbtn{width:100%;margin-top:8px;padding:11px;background:var(--green-bg);border:1.5px solid var(--green-bd);border-radius:9px;font-family:var(--sans);font-size:13px;font-weight:700;color:var(--green);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;transition:all .12s}
+.mbtn:active{background:#dcfce7}
+
+.empty{text-align:center;padding:32px 20px;color:var(--muted);font-size:13px}
+.ei{font-size:28px;margin-bottom:8px}
+.nores{margin-top:12px;background:var(--red-bg);border:1.5px solid var(--red-bd);border-radius:9px;padding:13px;text-align:center;color:var(--red);font-size:13px;font-weight:500}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;font-family:var(--sans);font-weight:700;font-size:13px;padding:11px 20px;border-radius:99px;z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.fadein{animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}
+</style>
+</head>
+<body>
+
+<header class="fadein">
+  <div class="logo">
+    <span class="logo-dork">Dork</span><span class="logo-mail">Mail</span>
+  </div>
+  <div class="logo-sub">Google dork builder &nbsp;·&nbsp; email scraper</div>
+</header>
+
+<main>
+
+<div class="sec fadein d1">
+  <div class="sec-num">1</div>
+  <div class="sec-title">Build search query</div>
+</div>
+
+<div class="card fadein d2">
+  <div class="f">
+    <span class="lbl">Platform</span>
+    <div class="chips" id="pc">
+      <div class="chip on" data-v="instagram.com">Instagram</div>
+      <div class="chip" data-v="facebook.com">Facebook</div>
+      <div class="chip" data-v="twitter.com">X / Twitter</div>
+      <div class="chip" data-v="linkedin.com">LinkedIn</div>
+      <div class="chip" data-v="tiktok.com">TikTok</div>
+      <div class="chip" data-v="youtube.com">YouTube</div>
+      <div class="chip" data-v="yelp.com">Yelp</div>
+    </div>
+  </div>
+  <div class="f">
+    <span class="lbl">Custom site <span style="text-transform:none;letter-spacing:0;font-weight:400">(overrides above)</span></span>
+    <input type="text" id="cs" placeholder="e.g. pinterest.com" oninput="bq()"/>
+  </div>
+  <div class="f">
+    <span class="lbl">Niche / Keyword</span>
+    <input type="text" id="kw" placeholder="e.g. florist, dentist, photographer…" oninput="bq()"/>
+  </div>
+  <div class="f">
+    <span class="lbl">Location <span style="text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></span>
+    <input type="text" id="loc" placeholder="e.g. New York, London, Dubai…" oninput="bq()"/>
+  </div>
+  <div class="f">
+    <span class="lbl">Email domains</span>
+    <div class="chips" id="dc">
+      <div class="dchip on" data-v="@gmail.com"><span class="dot"></span>Gmail</div>
+      <div class="dchip on" data-v="@yahoo.com"><span class="dot"></span>Yahoo</div>
+      <div class="dchip on" data-v="@outlook.com"><span class="dot"></span>Outlook</div>
+      <div class="dchip on" data-v="@hotmail.com"><span class="dot"></span>Hotmail</div>
+      <div class="dchip" data-v="@icloud.com"><span class="dot"></span>iCloud</div>
+      <div class="dchip" data-v="@proton.me"><span class="dot"></span>Proton</div>
+    </div>
+  </div>
+  <div class="f">
+    <span class="lbl">Generated query</span>
+    <div class="qbox" id="qout"><span class="qph">Fill in the fields above…</span></div>
+  </div>
+  <div class="brow">
+    <button class="btn btn-solid" onclick="og()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Search on Google
+    </button>
+    <button class="btn btn-outline" onclick="cq()">Copy</button>
+  </div>
+</div>
+
+<div class="sec fadein d3">
+  <div class="sec-num">2</div>
+  <div class="sec-title">Extract emails</div>
+  <div class="sec-hint">URL or paste</div>
+</div>
+
+<div class="card fadein d4">
+  <div class="f">
+    <span class="lbl">Fetch from URL</span>
+    <div class="frow">
+      <input type="text" id="surl" placeholder="https://…"/>
+      <button class="fbtn" id="fbtn" onclick="fetch_go()">Fetch</button>
+    </div>
+    <div class="st" id="st"></div>
+  </div>
+  <div class="or">or</div>
+  <div class="f">
+    <span class="lbl">Paste text / HTML source</span>
+    <textarea id="pa" rows="5" placeholder="Paste any text, HTML or page source here…"></textarea>
+  </div>
+  <button class="btn btn-solid" style="width:100%" onclick="sp()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    Extract from Paste
+  </button>
+  <div id="es" class="empty"><div class="ei">📭</div>Fetch a URL or paste content above</div>
+  <div id="ne" style="display:none" class="nores">No emails found — try a different source.</div>
+  <div id="rs" style="display:none">
+    <div class="rtop">
+      <div class="rbadge"><span class="rnum" id="rn">0</span> emails found</div>
+      <button class="ca" onclick="ca()">Copy all</button>
+    </div>
+    <div class="elist" id="el"></div>
+    <div class="drow">
+      <button class="dbtn" onclick="dt()">⬇ TXT</button>
+      <button class="dbtn" onclick="dc()">⬇ CSV</button>
+    </div>
+    <button class="mbtn" onclick="om()">✉ Open all in Mail</button>
+  </div>
+</div>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+var sp_='instagram.com';
+var sd=new Set(['@gmail.com','@yahoo.com','@outlook.com','@hotmail.com']);
+var em=[];
+var q='';
+
+document.querySelectorAll('#pc .chip').forEach(function(c){
+  c.addEventListener('click',function(){
+    document.querySelectorAll('#pc .chip').forEach(function(x){x.classList.remove('on')});
+    c.classList.add('on');
+    sp_=c.dataset.v;
+    document.getElementById('cs').value='';
+    bq();
+  });
+});
+document.getElementById('cs').addEventListener('input',function(){
+  document.querySelectorAll('#pc .chip').forEach(function(x){x.classList.remove('on')});
+  sp_='';
+  bq();
+});
+document.querySelectorAll('#dc .dchip').forEach(function(c){
+  c.addEventListener('click',function(){
+    c.classList.toggle('on');
+    sd.has(c.dataset.v)?sd.delete(c.dataset.v):sd.add(c.dataset.v);
+    bq();
+  });
+});
+
+function bq(){
+  var site=document.getElementById('cs').value.trim()||sp_;
+  var kw=document.getElementById('kw').value.trim();
+  var loc=document.getElementById('loc').value.trim();
+  var doms=Array.from(sd);
+  var box=document.getElementById('qout');
+  if(!site&&!kw&&!doms.length){box.innerHTML='<span class="qph">Fill in the fields above…</span>';q='';return;}
+  var parts=[];
+  if(site)parts.push('site:'+site);
+  if(kw)parts.push('"'+kw+'"');
+  if(loc)parts.push('"'+loc+'"');
+  if(doms.length)parts.push(doms.map(function(d){return'"'+d+'"'}).join(' OR '));
+  q=parts.join(' ');
+  box.textContent=q;
+}
+
+function og(){if(!q){toast('Build a query first');return;}window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');}
+function cq(){if(!q){toast('Nothing to copy yet');return;}navigator.clipboard.writeText(q).then(function(){toast('Query copied!')})}
+
+async function fetch_go(){
+  var url=document.getElementById('surl').value.trim();
+  if(!url){toast('Enter a URL first');return;}
+  if(!/^https?:\/\//i.test(url))url='https://'+url;
+  var btn=document.getElementById('fbtn'),st=document.getElementById('st');
+  btn.disabled=true;btn.textContent='…';
+  st.className='st';st.textContent='Fetching…';
+  rr();
+  try{
+    var r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
+    if(!r.ok)throw 0;
+    var d=await r.json();
+    if(!d.contents)throw 0;
+    st.className='st ok';
+    st.textContent='✓ Loaded — '+new URL(url).hostname;
+    show(xe(d.contents));
+  }catch(e){
+    st.className='st err';
+    st.textContent='✗ Failed — site may block proxies. Paste source below instead.';
+  }finally{
+    btn.disabled=false;btn.textContent='Fetch';
+  }
+}
+
+function sp(){var txt=document.getElementById('pa').value;if(!txt.trim()){toast('Paste something first');return;}show(xe(txt));}
+
+function xe(txt){
+  var m=txt.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g)||[];
+  return Array.from(new Set(m.map(function(e){return e.toLowerCase()})));
+}
+
+function show(found){
+  em=found;
+  document.getElementById('es').style.display='none';
+  if(!found.length){document.getElementById('ne').style.display='block';document.getElementById('rs').style.display='none';toast('No emails found');return;}
+  document.getElementById('ne').style.display='none';
+  document.getElementById('rs').style.display='block';
+  document.getElementById('rn').textContent=found.length;
+  var el=document.getElementById('el');
+  el.innerHTML='';
+  found.forEach(function(e,i){
+    var row=document.createElement('div');
+    row.className='erow';
+    row.innerHTML='<div class="ea">'+e+'</div><button class="ec" onclick="co(\''+e+'\',this)">copy</button>';
+    el.appendChild(row);
+  });
+  toast('✓ '+found.length+' email'+(found.length!==1?'s':'')+' found');
+}
+
+function rr(){document.getElementById('rs').style.display='none';document.getElementById('ne').style.display='none';}
+function co(e,btn){navigator.clipboard.writeText(e).then(function(){btn.textContent='✓';btn.classList.add('done');setTimeout(function(){btn.textContent='copy';btn.classList.remove('done')},1500);})}
+function ca(){navigator.clipboard.writeText(em.join('\n')).then(function(){toast('All emails copied!')})}
+function dt(){dl('emails.txt',em.join('\n'),'text/plain');toast('Downloaded emails.txt')}
+function dc(){dl('emails.csv','Email\n'+em.map(function(e){return'"'+e+'"'}).join('\n'),'text/csv');toast('Downloaded emails.csv')}
+function dl(n,c,t){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click()}
+function om(){window.location.href='mailto:'+em.join(',')}
+
+var tt;
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show')},2400);}
+
+document.getElementById('surl').addEventListener('keydown',function(e){if(e.key==='Enter')fetch_go();});
+
+bq();
+</script>
+</body>
+</html>
